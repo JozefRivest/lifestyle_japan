@@ -27,14 +27,12 @@ selected_dat_issues <- dat |>
     matches("^lifestyle_.*_num$"),
     matches("^lifestyle_.*_char$"),
     matches("^issue_.*_num$"),
-    matches("^issue_.*_char$"),
   ) |>
   select(-c(
-    "issue_GeneTherapyScaresMe_num",
-    "issue_exploreGeneModification_num",
-    "issue_benefitsGeneTherapy_num"
-  )) |>
-  na.omit()
+    issue_GeneTherapyScaresMe_num,
+    issue_exploreGeneModification_num,
+    issue_benefitsGeneTherapy_num
+  ))
 glimpse(selected_dat_issues)
 
 write_rds(selected_dat_issues, "_SharedFolder_article-lifestyle-japan/Data/selected_issues.rds")
