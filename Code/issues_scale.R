@@ -53,7 +53,7 @@ ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan_can_usa/images/scree_art
 efa_article_9 <- fa(
   article_9_isuses,
   nfactors = 1,
-  n.obs = nrow(efa_article_9),
+  n.obs = nrow(article_9_isuses),
   fm = "pa",
   cor = "cor"
 )
@@ -62,3 +62,6 @@ factortable(efa_article_9) |>
   style_tt(i = c(5, 8), bold = TRUE) |>
   style_tt(j = 2:5, align = "c") |>
   print("latex")
+
+
+psych::alpha(cor(article_9_isuses))
