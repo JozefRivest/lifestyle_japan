@@ -1,3 +1,4 @@
+library(tidyverse)
 library(readr)
 library(haven)
 library(rsample)
@@ -26,6 +27,7 @@ dat_rd_forest <- dat_issues |>
     issue_attackEnnemy_num = round(issue_attackEnnemy_num, 2),
     issue_forcesArticle9_num = round(issue_forcesArticle9_num, 2),
     issue_militaryStrengtheded_num = round(issue_militaryStrengtheded_num, 2),
+    across(matches("*_char"), ~ factor(.x)),
     across(matches("issue_*"), ~ case_when(
       .x == 0 ~ 1,
       .x == 0.33 ~ 2,
@@ -35,6 +37,7 @@ dat_rd_forest <- dat_issues |>
     security_scale = rowMeans(dat_issues[, c("issue_spendMilitary_num", "issue_attackEnnemy_num", "issue_forcesArticle9_num", "issue_militaryStrengtheded_num")], na.rm = TRUE)
   ) |>
   na.omit()
+nrow(dat_rd_forest)
 
 glimpse(dat_rd_forest)
 
@@ -49,13 +52,14 @@ dat_rd_forest <- dat_rd_forest |>
 set.seed(456)
 test_1 <- initial_split(dat_rd_forest, prop = 0.7)
 
-# Extract the training data
-train_data <- training(test_1) # Add this line
+# Extract both training and testing data
+train_data <- training(test_1)
+test_data <- testing(test_1)
 
-# number of features
-n_features <- length(setdiff(names(dat_rd_forest), "Security_Issues"))
+# Number of features (corrected variable name)
+n_features <- length(setdiff(names(dat_rd_forest), "security_scale"))
 
-# train a default random forest model
+# Train a default random forest model
 issues_security <- ranger(
   security_scale ~ .,
   data = train_data,
@@ -65,7 +69,18 @@ issues_security <- ranger(
   importance = "permutation"
 )
 
+# Print model summary
 print(issues_security)
+
+# Check model performance
+predictions <- predict(issues_security, test_data)
+rmse <- sqrt(mean((test_data$security_scale - predictions$predictions)^2))
+print(paste("RMSE:", round(rmse, 4)))
+
+# Variable importance
+importance_df <- importance(issues_security)
+head(importance_df[order(importance_df, decreasing = TRUE)], 10)
+
 
 p1 <- vip::vip(issues_security, num_features = 40, bar = FALSE)
 rf_security <- p1 +
@@ -81,27 +96,6 @@ pd_object <- partial(issues_security, pred.var = "lifestyle_favSportPlay_char")
 
 # Plot the partial dependence
 plotPartial(pd_object) # or autoplot(pd_object) for ggplot2-based plots
-
-
-# Tune hyperparameters
-issues_security_tuned <- ranger(
-  security_scale ~ .,
-  data = train_data,
-  mtry = floor(sqrt(n_features)), # Try different mtry
-  min.node.size = 10, # Increase min node size
-  num.trees = 1000, # More trees
-  respect.unordered.factors = "partition",
-  seed = 123,
-  importance = "permutation"
-)
-
-print(issues_security_tuned)
-
-p2 <- vip::vip(issues_security_tuned, num_features = 40, bar = FALSE)
-rf_security_2 <- p2 +
-  theme_classic() +
-  theme(text = element_text("CM Roman"))
-ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_security_2.pdf", plot = rf_security, height = 6, width = 6)
 
 # ========= Women Random Forest
 
