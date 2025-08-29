@@ -8,7 +8,7 @@ library(vip)
 library(extrafont)
 library(glmnet)
 library(caret)
-
+library(pdp)
 
 dat_issues <- read_rds("_SharedFolder_article-lifestyle-japan/Data/selected_issues.rds")
 
@@ -97,7 +97,7 @@ pd_object <- partial(issues_security, pred.var = "lifestyle_favSportPlay_char")
 # Plot the partial dependence
 plotPartial(pd_object) # or autoplot(pd_object) for ggplot2-based plots
 
-# ========= Women Random Forest
+# ==================== Women Random Forest ============================
 
 dat_issues$gender_scale <- rowMeans(
   dat_issues[
@@ -111,6 +111,8 @@ dat_issues$gender_scale <- rowMeans(
   ],
   na.rm = TRUE
 )
+
+head(dat_issues)
 
 dat_rd_forest_gender <- dat_issues |>
   select(
@@ -129,7 +131,7 @@ test_1 <- initial_split(dat_rd_forest_gender, prop = 0.7)
 train_data <- training(test_1) # Add this line
 
 # number of features
-n_features <- length(setdiff(names(dat_rd_forest), "gender_issues"))
+n_features <- length(setdiff(names(dat_rd_forest_gender), "gender_issues"))
 
 # train a default random forest model
 gender_issues <- ranger(
@@ -150,34 +152,53 @@ rf_gender <- p1 +
 ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_gender.pdf", plot = rf_gender, height = 6, width = 6)
 
 
-library(pdp)
-
 # Compute partial dependence values
 pd_object <- partial(gender_issues, pred.var = "lifestyle_favSportPlay_char")
 
 # Plot the partial dependence
 plotPartial(pd_object) # or autoplot(pd_object) for ggplot2-based plots
 
+glimpse(dat_issues)
 
-# Tune hyperparameters
-issues_gender_tuned <- ranger(
+dat_rd_forest_gender_full <- dat_issues |>
+  select(
+    gender_scale,
+    gender,
+    age_group,
+    prefecture,
+    income,
+    occupation,
+    education,
+    matches("lifestyle_*")
+  ) |>
+  select(-c(lifestyle_movie_char, lifestyle_music_char)) |>
+  na.omit()
+
+glimpse(dat_rd_forest_gender_full)
+
+set.seed(456)
+test_1_full <- initial_split(dat_rd_forest_gender_full, prop = 0.7)
+
+# Extract the training data
+train_data_full <- training(test_1) # Add this line
+
+# number of features
+n_features <- length(setdiff(names(dat_rd_forest_gender_full), "gender_issues"))
+
+# train a default random forest model
+gender_issues_full <- ranger(
   gender_scale ~ .,
-  data = train_data,
-  mtry = floor(sqrt(n_features)), # Try different mtry
-  min.node.size = 10, # Increase min node size
-  num.trees = 1000, # More trees
-  respect.unordered.factors = "partition",
+  data = train_data_full,
+  mtry = floor(n_features / 3),
+  respect.unordered.factors = "order",
   seed = 123,
   importance = "permutation"
 )
 
-print(issues_security_tuned)
+print(gender_issues_full)
 
-p2 <- vip::vip(issues_security_tuned, num_features = 40, bar = FALSE)
-rf_security_2 <- p2 +
+p1_gender_full <- vip::vip(gender_issues_full, num_features = 40, bar = FALSE)
+rf_gender_full <- p1_gender_full +
   theme_classic() +
   theme(text = element_text("CM Roman"))
-ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_security_2.pdf", plot = rf_security, height = 6, width = 6)
-
-
-mods <- lm(gender_scale ~ ., data = train_data)
+ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_gender_full.pdf", plot = rf_gender_full, height = 6, width = 6)
