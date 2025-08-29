@@ -3,6 +3,7 @@ library(psych)
 library(modelsummary)
 library(factortable)
 library(tinytable)
+library(readr)
 
 dat_issues <- read_rds("_SharedFolder_article-lifestyle-japan/Data/selected_issues.rds")
 
@@ -120,7 +121,7 @@ scree <- ggplot(scree_df, aes(x = Factors, y = Eigenvalues)) +
   geom_line() +
   theme_classic() +
   theme(text = element_text(family = "CM Roman"))
-ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/scree_gender.pdf", height = 5, width = 5)
+ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/scree_gender.pdf", plot = scree, height = 5, width = 5)
 
 efa_gender <- fa(
   women_issues,
