@@ -4,6 +4,7 @@ library(modelsummary)
 library(factortable)
 library(tinytable)
 library(readr)
+library(extrafont)
 
 dat_issues <- read_rds("_SharedFolder_article-lifestyle-japan/Data/selected_issues.rds")
 
