@@ -6,7 +6,7 @@ library(tinytable)
 library(readr)
 library(extrafont)
 
-dat_issues <- read_rds("_SharedFolder_article-lifestyle-japan/Data/selected_issues.rds")
+dat_issues <- read_rds("~/Dropbox/_SharedFolder_article-lifestyle-japan/Data/selected_issues.rds")
 
 # ============ Assessing dimensionality =================
 glimpse(dat_issues)
@@ -46,12 +46,12 @@ scree_df <- tibble(
   Eigenvalues = scree_data$fv
 )
 
-scree <- ggplot(scree_df, aes(x = Factors, y = Eigenvalues)) +
+scree_art_9 <- ggplot(scree_df, aes(x = Factors, y = Eigenvalues)) +
   geom_point() +
   geom_line() +
   theme_classic() +
   theme(text = element_text(family = "CM Roman"))
-ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan_can_usa/images/scree_article_9.pdf", height = 5, width = 5)
+# ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan_can_usa/images/scree_article_9.pdf", height = 5, width = 5)
 
 efa_article_9 <- fa(
   article_9_isuses,
@@ -122,7 +122,7 @@ scree <- ggplot(scree_df, aes(x = Factors, y = Eigenvalues)) +
   geom_line() +
   theme_classic() +
   theme(text = element_text(family = "CM Roman"))
-ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/scree_gender.pdf", plot = scree, height = 5, width = 5)
+# ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/scree_gender.pdf", plot = scree, height = 5, width = 5)
 
 efa_gender <- fa(
   women_issues,

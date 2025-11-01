@@ -10,7 +10,11 @@ library(glmnet)
 library(caret)
 library(pdp)
 
-dat_issues <- read_rds("_SharedFolder_article-lifestyle-japan/Data/selected_issues.rds")
+setwd("~/Dropbox")
+
+dat_issues <- read_rds(
+  "_SharedFolder_article-lifestyle-japan/Data/selected_issues.rds"
+)
 
 # ========= Sampling the data to create the test set
 
@@ -28,18 +32,29 @@ dat_rd_forest_security <- dat_issues |>
     issue_forcesArticle9_num = round(issue_forcesArticle9_num, 2),
     issue_militaryStrengtheded_num = round(issue_militaryStrengtheded_num, 2),
     across(matches("*_char"), ~ factor(.x)),
-    across(matches("issue_*"), ~ case_when(
-      .x == 0 ~ 1,
-      .x == 0.33 ~ 2,
-      .x == 0.67 ~ 3,
-      .x == 1 ~ 4
-    )),
-    security_scale = rowMeans(dat_issues[, c("issue_spendMilitary_num", "issue_attackEnnemy_num", "issue_forcesArticle9_num", "issue_militaryStrengtheded_num")], na.rm = TRUE)
+    across(
+      matches("issue_*"),
+      ~ case_when(
+        .x == 0 ~ 1,
+        .x == 0.33 ~ 2,
+        .x == 0.67 ~ 3,
+        .x == 1 ~ 4
+      )
+    ),
+    security_scale = rowMeans(
+      dat_issues[, c(
+        "issue_spendMilitary_num",
+        "issue_attackEnnemy_num",
+        "issue_forcesArticle9_num",
+        "issue_militaryStrengtheded_num"
+      )],
+      na.rm = TRUE
+    )
   ) |>
   na.omit()
-nrow(dat_rd_forest)
+nrow(dat_rd_forest_security)
 
-glimpse(dat_rd_forest)
+glimpse(dat_rd_forest_security)
 
 dat_rd_forest_security <- dat_rd_forest_security |>
   select(
@@ -86,7 +101,12 @@ p1 <- vip::vip(issues_security, num_features = 40, bar = FALSE)
 rf_security <- p1 +
   theme_classic() +
   theme(text = element_text("CM Roman"))
-ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_security.pdf", plot = rf_security, height = 6, width = 6)
+ggsave(
+  "~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_security.pdf",
+  plot = rf_security,
+  height = 6,
+  width = 6
+)
 
 
 # Compute partial dependence values
@@ -117,13 +137,24 @@ dat_rd_forest_security_full <- dat_issues |>
     issue_forcesArticle9_num = round(issue_forcesArticle9_num, 2),
     issue_militaryStrengtheded_num = round(issue_militaryStrengtheded_num, 2),
     across(matches("*_char"), ~ factor(.x)),
-    across(matches("issue_*"), ~ case_when(
-      .x == 0 ~ 1,
-      .x == 0.33 ~ 2,
-      .x == 0.67 ~ 3,
-      .x == 1 ~ 4
-    )),
-    security_scale = rowMeans(dat_issues[, c("issue_spendMilitary_num", "issue_attackEnnemy_num", "issue_forcesArticle9_num", "issue_militaryStrengtheded_num")], na.rm = TRUE)
+    across(
+      matches("issue_*"),
+      ~ case_when(
+        .x == 0 ~ 1,
+        .x == 0.33 ~ 2,
+        .x == 0.67 ~ 3,
+        .x == 1 ~ 4
+      )
+    ),
+    security_scale = rowMeans(
+      dat_issues[, c(
+        "issue_spendMilitary_num",
+        "issue_attackEnnemy_num",
+        "issue_forcesArticle9_num",
+        "issue_militaryStrengtheded_num"
+      )],
+      na.rm = TRUE
+    )
   ) |>
   select(
     -c(matches("issue_*"), lifestyle_movie_char, lifestyle_music_char)
@@ -139,7 +170,10 @@ test_1_security_full <- initial_split(dat_rd_forest_security_full, prop = 0.7)
 train_data_security_full <- training(test_1_security_full) # Add this line
 
 # number of features
-n_features <- length(setdiff(names(dat_rd_forest_security_full), "gender_issues"))
+n_features <- length(setdiff(
+  names(dat_rd_forest_security_full),
+  "gender_issues"
+))
 
 # train a default random forest model
 security_issues_full <- ranger(
@@ -153,17 +187,25 @@ security_issues_full <- ranger(
 
 print(security_issues_full)
 
-p1_security_full <- vip::vip(security_issues_full, num_features = 40, bar = FALSE)
+p1_security_full <- vip::vip(
+  security_issues_full,
+  num_features = 40,
+  bar = FALSE
+)
 rf_security_full <- p1_security_full +
   theme_classic() +
   theme(text = element_text("CM Roman"))
-ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_security_full.pdf", plot = rf_security_full, height = 6, width = 6)
+ggsave(
+  "~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_security_full.pdf",
+  plot = rf_security_full,
+  height = 6,
+  width = 6
+)
 
 # ==================== Women Random Forest ============================
 
 dat_issues$gender_scale <- rowMeans(
-  dat_issues[
-    ,
+  dat_issues[,
     c(
       "issue_genderWomenCareHousehold_num",
       "issue_genderWomenCareerOverFam_num",
@@ -211,7 +253,12 @@ p1 <- vip::vip(gender_issues, num_features = 40, bar = FALSE)
 rf_gender <- p1 +
   theme_classic() +
   theme(text = element_text("CM Roman"))
-ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_gender.pdf", plot = rf_gender, height = 6, width = 6)
+ggsave(
+  "~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_gender.pdf",
+  plot = rf_gender,
+  height = 6,
+  width = 6
+)
 
 
 # Compute partial dependence values
@@ -263,4 +310,9 @@ p1_gender_full <- vip::vip(gender_issues_full, num_features = 40, bar = FALSE)
 rf_gender_full <- p1_gender_full +
   theme_classic() +
   theme(text = element_text("CM Roman"))
-ggsave("~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_gender_full.pdf", plot = rf_gender_full, height = 6, width = 6)
+ggsave(
+  "~/Dropbox/Applications/Overleaf/lifestyle_japan/images/rf_gender_full.pdf",
+  plot = rf_gender_full,
+  height = 6,
+  width = 6
+)
